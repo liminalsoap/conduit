@@ -5,10 +5,14 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func NewDb(url string) (*pgx.Conn, error) {
+type Postgres struct {
+	Conn *pgx.Conn
+}
+
+func NewDb(url string) (*Postgres, error) {
 	conn, err := pgx.Connect(context.Background(), url)
 	if err != nil {
 		return nil, err
 	}
-	return conn, nil
+	return &Postgres{Conn: conn}, nil
 }
