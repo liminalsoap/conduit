@@ -1,0 +1,8 @@
+postgresql:
+  url: postgres://root:secret@localhost:5432/conduit?sslmode=disable
+
+logger:
+  level: debug
+
+http:
+  port: 8080
