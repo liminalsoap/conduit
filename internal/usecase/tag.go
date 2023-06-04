@@ -13,6 +13,6 @@ func NewTagUseCase(r TagRepo) *TagUseCase {
 	return &TagUseCase{r}
 }
 
-func (t TagUseCase) List(ctx context.Context) (*[]entity.Tag, error) {
-	return t.repo.GetTags(ctx)
+func (uc TagUseCase) List(ctx context.Context) (*[]entity.Tag, error) {
+	return uc.repo.GetTags(ctx)
 }

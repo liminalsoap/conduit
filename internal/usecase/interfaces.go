@@ -7,12 +7,25 @@ import (
 
 type UseCases struct {
 	Tag
+	User
 }
 
 type Tag interface {
-	List(ctx context.Context) (*[]entity.Tag, error)
+	List(context.Context) (*[]entity.Tag, error)
 }
 
 type TagRepo interface {
-	GetTags(ctx context.Context) (*[]entity.Tag, error)
+	GetTags(context.Context) (*[]entity.Tag, error)
+}
+
+type User interface {
+	Create(context.Context, entity.User) (entity.User, error)
+	GetUser(context.Context, uint64) (entity.User, error)
+	Update(context.Context, entity.User) (entity.User, error)
+}
+
+type UserRepo interface {
+	Create(context.Context, entity.User) (entity.User, error)
+	GetById(context.Context, uint64) (entity.User, error)
+	Update(context.Context, entity.User) (entity.User, error)
 }

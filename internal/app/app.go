@@ -16,7 +16,11 @@ func initUseCases(pg *postgres.Postgres) usecase.UseCases {
 	tagUseCase := usecase.NewTagUseCase(
 		repository.NewTagRepo(pg),
 	)
+	userUseCase := usecase.NewUserUseCase(
+		repository.NewUserRepo(pg),
+	)
 	useCases.Tag = tagUseCase
+	useCases.User = userUseCase
 	return useCases
 }
 

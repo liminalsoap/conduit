@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func NewRouter(handler *gin.Engine, log logger.Interface, useCases usecase.UseCases) {
+func NewRouter(handler *gin.Engine, log logger.Interface, uc usecase.UseCases) {
 	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())
 
@@ -14,6 +14,7 @@ func NewRouter(handler *gin.Engine, log logger.Interface, useCases usecase.UseCa
 
 	h := handler.Group("/api")
 	{
-		NewTagRoutes(h, log, useCases)
+		NewTagRoutes(h, log, uc.Tag)
+		NewUserRoutes(h, log, uc.User)
 	}
 }
