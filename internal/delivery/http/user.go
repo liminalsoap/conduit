@@ -3,6 +3,7 @@ package http
 import (
 	"conduit-go/config"
 	"conduit-go/internal/entity"
+	"conduit-go/internal/middleware"
 	"conduit-go/internal/usecase"
 	"conduit-go/pkg/logger"
 	"conduit-go/pkg/utils"
@@ -16,7 +17,9 @@ type userRoutes struct {
 	cfg     *config.Config
 }
 
-func NewUserRoutes(cfg *config.Config, handler *gin.RouterGroup, log logger.Interface, uc usecase.User) {
+const tokenClaim = "email"
+
+func NewUserRoutes(handler *gin.RouterGroup, log logger.Interface, uc usecase.User, cfg *config.Config, mw *middleware.MiddlewareManager) {
 	routes := userRoutes{uc, log, cfg}
 
 	h := handler.Group("/users")
@@ -24,6 +27,7 @@ func NewUserRoutes(cfg *config.Config, handler *gin.RouterGroup, log logger.Inte
 		h.POST("/", routes.Register)
 		h.POST("/login", routes.Login)
 	}
+	handler.GET("/user", mw.AuthMiddleware, routes.GetCurrentUser)
 }
 
 type createInput struct {
@@ -102,7 +106,7 @@ func (u userRoutes) Login(c *gin.Context) {
 	}
 
 	// generate jwt
-	token, err := utils.NewToken(u.cfg.Http.Secret, user.Id, user.Email)
+	token, err := utils.NewToken(u.cfg.Http.Secret, user.Email)
 	if err != nil {
 		u.log.Errorf("failed to generate token: %s", err)
 		errorResponse(c, http.StatusUnauthorized, "failed to generate token")
@@ -113,5 +117,10 @@ func (u userRoutes) Login(c *gin.Context) {
 	// respond
 	output := user.PrepareOutput()
 	output.Token = token
+	c.JSON(http.StatusOK, output)
+}
+
+func (u userRoutes) GetCurrentUser(c *gin.Context) {
+	output, _ := c.Get("user")
 	c.JSON(http.StatusOK, output)
 }

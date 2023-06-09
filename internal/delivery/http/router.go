@@ -2,12 +2,15 @@ package http
 
 import (
 	"conduit-go/config"
+	"conduit-go/internal/middleware"
 	"conduit-go/internal/usecase"
 	"conduit-go/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 
-func NewRouter(cfg *config.Config, handler *gin.Engine, log logger.Interface, uc usecase.UseCases) {
+const authHeader = "Authorization"
+
+func NewRouter(handler *gin.Engine, log logger.Interface, uc usecase.UseCases, cfg *config.Config, mw *middleware.MiddlewareManager) {
 	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())
 
@@ -16,6 +19,6 @@ func NewRouter(cfg *config.Config, handler *gin.Engine, log logger.Interface, uc
 	h := handler.Group("/api")
 	{
 		NewTagRoutes(h, log, uc.Tag)
-		NewUserRoutes(cfg, h, log, uc.User)
+		NewUserRoutes(h, log, uc.User, cfg, mw)
 	}
 }

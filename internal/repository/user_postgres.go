@@ -29,8 +29,23 @@ func (r UserRepo) Create(ctx context.Context, user entity.User) (entity.User, er
 }
 
 func (r UserRepo) GetById(ctx context.Context, id uint64) (entity.User, error) {
-	//TODO implement me
-	panic("implement me!")
+	var user entity.User
+	err := r.Conn.QueryRow(
+		ctx,
+		"SELECT id, email, username, password, bio, image FROM users WHERE id = $1",
+		id,
+	).Scan(
+		&user.Id,
+		&user.Email,
+		&user.Username,
+		&user.Password,
+		&user.Bio,
+		&user.Image,
+	)
+	if err != nil {
+		return entity.User{}, err
+	}
+	return user, nil
 }
 
 func (r UserRepo) Update(ctx context.Context, user entity.User) (entity.User, error) {

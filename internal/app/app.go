@@ -3,6 +3,7 @@ package app
 import (
 	"conduit-go/config"
 	"conduit-go/internal/delivery/http"
+	"conduit-go/internal/middleware"
 	"conduit-go/internal/repository"
 	"conduit-go/internal/usecase"
 	"conduit-go/pkg/logger"
@@ -36,6 +37,7 @@ func Run(cfg *config.Config) {
 	useCases := initUseCases(pg)
 
 	handler := gin.Default()
-	http.NewRouter(cfg, handler, log, useCases)
+	mw := middleware.NewMiddlewareManager(cfg, log, useCases.User)
+	http.NewRouter(handler, log, useCases, cfg, mw)
 	log.Fatalf("router error: %s", handler.Run(cfg.Http.Port))
 }
