@@ -37,3 +37,24 @@ func (r UserRepo) Update(ctx context.Context, user entity.User) (entity.User, er
 	//TODO implement me
 	panic("implement me")
 }
+
+func (r UserRepo) FindByEmail(ctx context.Context, email string) (entity.User, error) {
+	var user entity.User
+	err := r.Conn.QueryRow(
+		ctx,
+		"SELECT id, email, username, password, bio, image FROM users WHERE email = $1",
+		email,
+	).Scan(
+		&user.Id,
+		&user.Email,
+		&user.Username,
+		&user.Password,
+		&user.Bio,
+		&user.Image,
+	)
+	if err != nil {
+		return entity.User{}, err
+	}
+
+	return user, nil
+}

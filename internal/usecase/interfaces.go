@@ -22,10 +22,12 @@ type User interface {
 	Create(context.Context, entity.User) (entity.User, error)
 	GetUser(context.Context, uint64) (entity.User, error)
 	Update(context.Context, entity.User) (entity.User, error)
+	FindByEmail(context.Context, string) (entity.User, error)
 }
 
 type UserRepo interface {
 	Create(context.Context, entity.User) (entity.User, error)
 	GetById(context.Context, uint64) (entity.User, error)
 	Update(context.Context, entity.User) (entity.User, error)
+	FindByEmail(context.Context, string) (entity.User, error)
 }

@@ -19,7 +19,8 @@ type Logger struct {
 }
 
 type Http struct {
-	Port string
+	Port   string
+	Secret string
 }
 
 func NewConfig() (*Config, error) {

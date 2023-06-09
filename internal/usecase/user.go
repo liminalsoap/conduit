@@ -24,3 +24,7 @@ func (uc UserUseCase) GetUser(ctx context.Context, id uint64) (entity.User, erro
 func (uc UserUseCase) Update(ctx context.Context, user entity.User) (entity.User, error) {
 	return uc.repo.Update(ctx, user)
 }
+
+func (uc UserUseCase) FindByEmail(ctx context.Context, email string) (entity.User, error) {
+	return uc.repo.FindByEmail(ctx, email)
+}

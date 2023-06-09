@@ -36,6 +36,6 @@ func Run(cfg *config.Config) {
 	useCases := initUseCases(pg)
 
 	handler := gin.Default()
-	http.NewRouter(handler, log, useCases)
+	http.NewRouter(cfg, handler, log, useCases)
 	log.Fatalf("router error: %s", handler.Run(cfg.Http.Port))
 }
