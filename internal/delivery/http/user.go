@@ -28,6 +28,7 @@ func NewUserRoutes(handler *gin.RouterGroup, log logger.Interface, uc usecase.Us
 		h.POST("/login", routes.Login)
 	}
 	handler.GET("/user", mw.AuthMiddleware, routes.GetCurrentUser)
+	handler.PUT("/user", mw.AuthMiddleware, routes.Update)
 }
 
 type createInput struct {
@@ -121,6 +122,58 @@ func (u userRoutes) Login(c *gin.Context) {
 }
 
 func (u userRoutes) GetCurrentUser(c *gin.Context) {
-	output, _ := c.Get("user")
+	userCtx, _ := c.Get("user")
+	user := userCtx.(entity.User)
+
+	output := user.PrepareOutput()
+	output.Token = c.GetHeader(authHeader)
+	c.JSON(http.StatusOK, output)
+}
+
+type updateInput struct {
+	User struct {
+		Email    string `json:"email"`
+		Username string `json:"username"`
+		Password string `json:"password"`
+		Image    string `json:"image"`
+		Bio      string `json:"bio"`
+	} `json:"user"`
+}
+
+func (u userRoutes) Update(c *gin.Context) {
+	var input updateInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		u.log.Errorf("failed to bind: %s", err)
+		errorResponse(c, http.StatusUnauthorized, "failed to bind")
+
+		return
+	}
+
+	currentUserCtx, _ := c.Get("user")
+	currentUser := currentUserCtx.(entity.User)
+
+	if input.User.Email != "" {
+		currentUser.Email = input.User.Email
+	}
+	if input.User.Username != "" {
+		currentUser.Username = input.User.Username
+	}
+	if input.User.Password != "" {
+		currentUser.Password = input.User.Password
+	}
+	if input.User.Image != "" {
+		currentUser.Image.String = input.User.Image
+	}
+	if input.User.Bio != "" {
+		currentUser.Bio.String = input.User.Bio
+	}
+
+	user, err := u.useCase.Update(c.Request.Context(), currentUser)
+	if err != nil {
+		return
+	}
+
+	output := user.PrepareOutput()
+	output.Token = c.GetHeader(authHeader)
 	c.JSON(http.StatusOK, output)
 }

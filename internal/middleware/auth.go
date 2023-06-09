@@ -28,9 +28,6 @@ func (mw *MiddlewareManager) AuthMiddleware(c *gin.Context) {
 		return
 	}
 
-	// respond
-	output := user.PrepareOutput()
-	output.Token = token
-	c.Set("user", output)
+	c.Set("user", user)
 	c.Next()
 }
