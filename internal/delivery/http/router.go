@@ -20,5 +20,6 @@ func NewRouter(handler *gin.Engine, log logger.Interface, uc usecase.UseCases, c
 	{
 		NewTagRoutes(h, log, uc.Tag)
 		NewUserRoutes(h, log, uc.User, cfg, mw)
+		NewFollowingRoutes(h, log, uc.Following, mw)
 	}
 }

@@ -8,6 +8,7 @@ import (
 type UseCases struct {
 	Tag
 	User
+	Following
 }
 
 type Tag interface {
@@ -23,6 +24,7 @@ type User interface {
 	GetUser(context.Context, uint64) (entity.User, error)
 	Update(context.Context, entity.User) (entity.User, error)
 	FindByEmail(context.Context, string) (entity.User, error)
+	FindByUsername(context.Context, string) (entity.User, error)
 }
 
 type UserRepo interface {
@@ -30,4 +32,17 @@ type UserRepo interface {
 	GetById(context.Context, uint64) (entity.User, error)
 	Update(context.Context, entity.User) (entity.User, error)
 	FindByEmail(context.Context, string) (entity.User, error)
+	FindByUsername(context.Context, string) (entity.User, error)
+}
+
+type Following interface {
+	Follow(context.Context, string, uint64) error
+	Unfollow(context.Context, string, uint64) error
+	CheckIsFollowing(context.Context, string, uint64) (bool, error)
+}
+
+type FollowingRepo interface {
+	Follow(context.Context, uint64, uint64) error
+	Unfollow(context.Context, uint64, uint64) error
+	CheckIsFollowing(context.Context, uint64, uint64) (bool, error)
 }

@@ -14,14 +14,20 @@ import (
 
 func initUseCases(pg *postgres.Postgres) usecase.UseCases {
 	var useCases usecase.UseCases
+	userRepo := repository.NewUserRepo(pg)
 	tagUseCase := usecase.NewTagUseCase(
 		repository.NewTagRepo(pg),
 	)
 	userUseCase := usecase.NewUserUseCase(
-		repository.NewUserRepo(pg),
+		userRepo,
+	)
+	followingUceCase := usecase.NewFollowUseCase(
+		repository.NewFollowingRepo(pg),
+		userRepo,
 	)
 	useCases.Tag = tagUseCase
 	useCases.User = userUseCase
+	useCases.Following = followingUceCase
 	return useCases
 }
 

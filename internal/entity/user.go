@@ -42,13 +42,34 @@ type UserOutput struct {
 	Output `json:"user"`
 }
 
-func (u *User) PrepareOutput() UserOutput {
+func (u *User) PrepareOutput(token string) UserOutput {
 	user := Output{
 		u.Email,
 		u.Username,
-		"",
+		token,
 		u.Bio.String,
 		u.Image.String,
 	}
 	return UserOutput{user}
+}
+
+type Profile struct {
+	Username  string `json:"username"`
+	Bio       string `json:"bio"`
+	Image     string `json:"image"`
+	Following bool   `json:"following"`
+}
+
+type ProfileOutput struct {
+	Profile `json:"profile"`
+}
+
+func (u *User) PrepareProfileOutput(isFollowing bool) ProfileOutput {
+	profile := Profile{
+		u.Username,
+		u.Bio.String,
+		u.Image.String,
+		isFollowing,
+	}
+	return ProfileOutput{profile}
 }

@@ -68,7 +68,7 @@ func (u userRoutes) Register(c *gin.Context) {
 		return
 	}
 
-	output := usr.PrepareOutput()
+	output := usr.PrepareOutput("")
 	c.JSON(http.StatusOK, output)
 }
 
@@ -116,8 +116,7 @@ func (u userRoutes) Login(c *gin.Context) {
 	}
 
 	// respond
-	output := user.PrepareOutput()
-	output.Token = token
+	output := user.PrepareOutput(token)
 	c.JSON(http.StatusOK, output)
 }
 
@@ -125,8 +124,7 @@ func (u userRoutes) GetCurrentUser(c *gin.Context) {
 	userCtx, _ := c.Get("user")
 	user := userCtx.(entity.User)
 
-	output := user.PrepareOutput()
-	output.Token = c.GetHeader(authHeader)
+	output := user.PrepareOutput(c.GetHeader(authHeader))
 	c.JSON(http.StatusOK, output)
 }
 
@@ -173,7 +171,6 @@ func (u userRoutes) Update(c *gin.Context) {
 		return
 	}
 
-	output := user.PrepareOutput()
-	output.Token = c.GetHeader(authHeader)
+	output := user.PrepareOutput(c.GetHeader(authHeader))
 	c.JSON(http.StatusOK, output)
 }

@@ -84,3 +84,23 @@ func (r UserRepo) FindByEmail(ctx context.Context, email string) (entity.User, e
 
 	return user, nil
 }
+
+func (r UserRepo) FindByUsername(ctx context.Context, username string) (entity.User, error) {
+	var user entity.User
+	err := r.Conn.QueryRow(
+		ctx,
+		"SELECT id, email, username, password, bio, image FROM users WHERE username = $1",
+		username,
+	).Scan(
+		&user.Id,
+		&user.Email,
+		&user.Username,
+		&user.Password,
+		&user.Bio,
+		&user.Image,
+	)
+	if err != nil {
+		return entity.User{}, err
+	}
+	return user, nil
+}

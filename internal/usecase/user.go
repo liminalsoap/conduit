@@ -28,3 +28,7 @@ func (uc UserUseCase) Update(ctx context.Context, user entity.User) (entity.User
 func (uc UserUseCase) FindByEmail(ctx context.Context, email string) (entity.User, error) {
 	return uc.repo.FindByEmail(ctx, email)
 }
+
+func (uc UserUseCase) FindByUsername(ctx context.Context, username string) (entity.User, error) {
+	return uc.repo.FindByEmail(ctx, username)
+}
