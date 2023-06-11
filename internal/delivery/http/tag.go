@@ -15,7 +15,7 @@ type tagRoutes struct {
 func NewTagRoutes(handler *gin.RouterGroup, log logger.Interface, uc usecase.Tag) {
 	routes := &tagRoutes{uc, log}
 
-	handler.GET("/tags", routes.List)
+	handler.POST("/tags", routes.List)
 }
 
 type TagsOutput struct {
@@ -27,6 +27,8 @@ func (r tagRoutes) List(c *gin.Context) {
 	if err != nil {
 		r.log.Errorf("route err: %s", err)
 		errorResponse(c, http.StatusInternalServerError, "internal error")
+
+		return
 	}
 	var tagsOutput TagsOutput
 	for _, tag := range *tags {
