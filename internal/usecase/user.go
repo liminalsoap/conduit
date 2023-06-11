@@ -30,5 +30,5 @@ func (uc UserUseCase) FindByEmail(ctx context.Context, email string) (entity.Use
 }
 
 func (uc UserUseCase) FindByUsername(ctx context.Context, username string) (entity.User, error) {
-	return uc.repo.FindByEmail(ctx, username)
+	return uc.repo.FindByUsername(ctx, username)
 }

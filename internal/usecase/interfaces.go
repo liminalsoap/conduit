@@ -36,9 +36,9 @@ type UserRepo interface {
 }
 
 type Following interface {
-	Follow(context.Context, string, uint64) error
-	Unfollow(context.Context, string, uint64) error
-	CheckIsFollowing(context.Context, string, uint64) (bool, error)
+	Follow(context.Context, uint64, uint64) error
+	Unfollow(context.Context, uint64, uint64) error
+	CheckIsFollowing(context.Context, uint64, uint64) (bool, error)
 }
 
 type FollowingRepo interface {

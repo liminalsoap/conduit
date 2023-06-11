@@ -10,14 +10,14 @@ import (
 )
 
 type followingRoutes struct {
-	useCase usecase.Following
-	log     logger.Interface
+	useCase     usecase.Following
+	userUseCase usecase.User
+	log         logger.Interface
 }
 
-func NewFollowingRoutes(handler *gin.RouterGroup, log logger.Interface, uc usecase.Following, mw *middleware.MiddlewareManager) {
-	routes := &followingRoutes{uc, log}
+func NewFollowingRoutes(handler *gin.RouterGroup, log logger.Interface, uc usecase.Following, userUC usecase.User, mw *middleware.MiddlewareManager) {
+	routes := &followingRoutes{uc, userUC, log}
 
-	// TODO: update profile output! urgent!
 	h := handler.Group("profiles")
 	{
 		h.GET("/:username", mw.AuthMiddleware, routes.GetProfile)
@@ -30,10 +30,11 @@ func (f followingRoutes) GetProfile(c *gin.Context) {
 	// TODO: make optional auth
 	userCtx, _ := c.Get("user")
 	user := userCtx.(entity.User)
+	followingUsername := c.Param("username")
 
 	// find user by username & follow
-	followingUsername := c.Param("username")
-	isFollowing, err := f.useCase.CheckIsFollowing(c.Request.Context(), followingUsername, user.Id)
+	followingUser, err := f.userUseCase.FindByUsername(c.Request.Context(), followingUsername)
+	isFollowing, err := f.useCase.CheckIsFollowing(c.Request.Context(), user.Id, followingUser.Id)
 	if err != nil {
 		f.log.Errorf("failed to follow: %s", err)
 		errorResponse(c, http.StatusBadRequest, "follow failed")
@@ -41,17 +42,18 @@ func (f followingRoutes) GetProfile(c *gin.Context) {
 		return
 	}
 
-	profile := user.PrepareProfileOutput(isFollowing)
+	profile := followingUser.PrepareProfileOutput(isFollowing)
 	c.JSON(http.StatusOK, profile)
 }
 
 func (f followingRoutes) Follow(c *gin.Context) {
 	userCtx, _ := c.Get("user")
 	user := userCtx.(entity.User)
+	followingUsername := c.Param("username")
 
 	// find user by username & follow
-	followingUsername := c.Param("username")
-	err := f.useCase.Follow(c.Request.Context(), followingUsername, user.Id)
+	followingUser, err := f.userUseCase.FindByUsername(c.Request.Context(), followingUsername)
+	err = f.useCase.Follow(c.Request.Context(), user.Id, followingUser.Id)
 	if err != nil {
 		f.log.Errorf("failed to follow: %s", err)
 		errorResponse(c, http.StatusBadRequest, "follow failed")
@@ -59,17 +61,19 @@ func (f followingRoutes) Follow(c *gin.Context) {
 		return
 	}
 
-	profile := user.PrepareProfileOutput(true)
+	profile := followingUser.PrepareProfileOutput(true)
 	c.JSON(http.StatusOK, profile)
 }
 
 func (f followingRoutes) Unfollow(c *gin.Context) {
 	userCtx, _ := c.Get("user")
 	user := userCtx.(entity.User)
+	followingUsername := c.Param("username")
 
 	// find user by username & follow
-	followingUsername := c.Param("username")
-	err := f.useCase.Unfollow(c.Request.Context(), followingUsername, user.Id)
+	followingUser, err := f.userUseCase.FindByUsername(c.Request.Context(), followingUsername)
+	err = f.useCase.Unfollow(c.Request.Context(), user.Id, followingUser.Id)
+
 	if err != nil {
 		f.log.Errorf("failed to follow: %s", err)
 		errorResponse(c, http.StatusBadRequest, "follow failed")
@@ -77,6 +81,6 @@ func (f followingRoutes) Unfollow(c *gin.Context) {
 		return
 	}
 
-	profile := user.PrepareProfileOutput(false)
+	profile := followingUser.PrepareProfileOutput(false)
 	c.JSON(http.StatusOK, profile)
 }
