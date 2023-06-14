@@ -1,6 +1,8 @@
 package usecase
 
-import "context"
+import (
+	"context"
+)
 
 type ArticleTagUseCase struct {
 	repo ArticleTagRepo
@@ -8,6 +10,10 @@ type ArticleTagUseCase struct {
 
 func NewArticleTagUseCase(r ArticleTagRepo) *ArticleTagUseCase {
 	return &ArticleTagUseCase{r}
+}
+
+func (a ArticleTagUseCase) GetTagsByArticleId(ctx context.Context, articleId uint64) ([]uint64, error) {
+	return a.repo.GetTagIdsByArticleId(ctx, articleId)
 }
 
 func (a ArticleTagUseCase) Add(ctx context.Context, articleId uint64, tagId uint64) error {

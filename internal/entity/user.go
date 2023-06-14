@@ -64,6 +64,16 @@ type ProfileOutput struct {
 	Profile `json:"profile"`
 }
 
+func (u *User) PrepareReuseProfileOutput(isFollowing bool) Profile {
+	profile := Profile{
+		u.Username,
+		u.Bio.String,
+		u.Image.String,
+		isFollowing,
+	}
+	return profile
+}
+
 func (u *User) PrepareProfileOutput(isFollowing bool) ProfileOutput {
 	profile := Profile{
 		u.Username,

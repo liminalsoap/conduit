@@ -14,9 +14,35 @@ func NewArticleRepo(pg *postgres.Postgres) *ArticleRepo {
 	return &ArticleRepo{pg}
 }
 
-func (a ArticleRepo) GetBySlug(ctx context.Context, s string) (entity.Article, error) {
-	//TODO implement me
-	panic("implement me")
+func (a ArticleRepo) GetIdBySlug(ctx context.Context, slug string) (uint64, error) {
+	var id uint64
+	err := a.Conn.QueryRow(ctx, "SELECT id FROM articles WHERE slug = $1", slug).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
+}
+
+func (a ArticleRepo) GetBySlug(ctx context.Context, slug string) (entity.Article, error) {
+	var article entity.Article
+	err := a.Conn.QueryRow(
+		ctx,
+		"SELECT id, slug, title, description, body, created_at, updated_at, user_id FROM articles WHERE slug = $1",
+		slug,
+	).Scan(
+		&article.Id,
+		&article.Slug,
+		&article.Title,
+		&article.Description,
+		&article.Body,
+		&article.CreatedAt,
+		&article.UpdatedAt,
+		&article.UserId,
+	)
+	if err != nil {
+		return entity.Article{}, err
+	}
+	return article, nil
 }
 
 func (a ArticleRepo) Create(ctx context.Context, article entity.Article) (entity.Article, error) {
@@ -32,20 +58,24 @@ func (a ArticleRepo) Create(ctx context.Context, article entity.Article) (entity
 	if err != nil {
 		return entity.Article{}, err
 	}
-	return article, err
+	createdArticle, err := a.GetBySlug(ctx, article.Slug)
+	if err != nil {
+		return entity.Article{}, err
+	}
+	return createdArticle, err
 }
 
-func (a ArticleRepo) Update(ctx context.Context, s string) (entity.Article, error) {
+func (a ArticleRepo) Update(ctx context.Context, slug string) (entity.Article, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (a ArticleRepo) DeleteBySlug(ctx context.Context, s string) (entity.Article, error) {
+func (a ArticleRepo) DeleteBySlug(ctx context.Context, slug string) (entity.Article, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (a ArticleRepo) List(ctx context.Context, s string) ([]entity.Article, error) {
+func (a ArticleRepo) List(ctx context.Context, slug string) ([]entity.Article, error) {
 	//TODO implement me
 	panic("implement me")
 }

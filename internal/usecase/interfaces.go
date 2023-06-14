@@ -16,12 +16,14 @@ type Tag interface {
 	List(context.Context) (*[]entity.Tag, error)
 	GetByTitle(context.Context, string) (uint64, error)
 	GetByTitles(context.Context, []string) ([]uint64, error)
+	GetByIds(context.Context, []uint64) ([]string, error)
 }
 
 type TagRepo interface {
 	GetTags(context.Context) (*[]entity.Tag, error)
 	GetByTitle(context.Context, string) (uint64, error)
 	GetByTitles(context.Context, []string) ([]uint64, error)
+	GetByIds(context.Context, []uint64) ([]string, error)
 }
 
 type User interface {
@@ -58,9 +60,12 @@ type Article interface {
 	Update(context.Context, string) (entity.Article, error)
 	DeleteBySlug(context.Context, string) (entity.Article, error)
 	List(context.Context, string) ([]entity.Article, error)
+
+	GetTagList(context.Context, uint64) ([]string, error)
 }
 
 type ArticleRepo interface {
+	GetIdBySlug(context.Context, string) (uint64, error)
 	GetBySlug(context.Context, string) (entity.Article, error)
 	Create(context.Context, entity.Article) (entity.Article, error)
 	Update(context.Context, string) (entity.Article, error)
@@ -69,10 +74,12 @@ type ArticleRepo interface {
 }
 
 type ArticleTag interface {
+	GetTagIdsByArticleId(context.Context, uint64) ([]uint64, error)
 	Add(context.Context, uint64, uint64) error
 	AddList(context.Context, uint64, []uint64) error
 }
 
 type ArticleTagRepo interface {
+	GetTagIdsByArticleId(context.Context, uint64) ([]uint64, error)
 	Add(context.Context, uint64, uint64) error
 }

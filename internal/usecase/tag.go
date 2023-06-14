@@ -24,3 +24,7 @@ func (uc TagUseCase) GetByTitle(ctx context.Context, title string) (uint64, erro
 func (uc TagUseCase) GetByTitles(ctx context.Context, titles []string) ([]uint64, error) {
 	return uc.repo.GetByTitles(ctx, titles)
 }
+
+func (uc TagUseCase) GetByIds(ctx context.Context, ids []uint64) ([]string, error) {
+	return uc.repo.GetByIds(ctx, ids)
+}

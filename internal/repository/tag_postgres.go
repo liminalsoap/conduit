@@ -4,7 +4,6 @@ import (
 	"conduit-go/internal/entity"
 	"conduit-go/pkg/postgres"
 	"context"
-	"fmt"
 )
 
 type TagRepo struct {
@@ -51,7 +50,6 @@ func (t TagRepo) GetByTitle(ctx context.Context, title string) (uint64, error) {
 
 func (t TagRepo) GetByTitles(ctx context.Context, titles []string) ([]uint64, error) {
 	rows, err := t.Conn.Query(ctx, "SELECT id FROM tags WHERE title = ANY($1)", titles)
-	fmt.Println(rows.RawValues())
 	if err != nil {
 		return []uint64{}, err
 	}
@@ -69,4 +67,25 @@ func (t TagRepo) GetByTitles(ctx context.Context, titles []string) ([]uint64, er
 		return nil, err
 	}
 	return ids, nil
+}
+
+func (t TagRepo) GetByIds(ctx context.Context, ids []uint64) ([]string, error) {
+	rows, err := t.Conn.Query(ctx, "SELECT title FROM tags WHERE id = ANY($1)", ids)
+	if err != nil {
+		return []string{}, err
+	}
+
+	var titles []string
+	for rows.Next() {
+		var title string
+		err = rows.Scan(&title)
+		if err != nil {
+			return nil, err
+		}
+		titles = append(titles, title)
+	}
+	if rows.Err() != nil {
+		return nil, err
+	}
+	return titles, nil
 }
