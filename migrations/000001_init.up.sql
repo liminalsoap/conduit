@@ -62,18 +62,18 @@ COMMENT ON COLUMN "articles"."user_id" IS 'author id';
 
 COMMENT ON COLUMN "comments"."user_id" IS 'author id';
 
-ALTER TABLE "follows" ADD FOREIGN KEY ("followed_user_id") REFERENCES "users" ("id");
+ALTER TABLE "follows" ADD FOREIGN KEY ("followed_user_id") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
-ALTER TABLE "follows" ADD FOREIGN KEY ("following_user_id") REFERENCES "users" ("id");
+ALTER TABLE "follows" ADD FOREIGN KEY ("following_user_id") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
-ALTER TABLE "articles" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
+ALTER TABLE "articles" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE NO ACTION;
 
-ALTER TABLE "likes" ADD FOREIGN KEY ("article_id") REFERENCES "articles" ("id");
+ALTER TABLE "likes" ADD FOREIGN KEY ("article_id") REFERENCES "articles" ("id") ON DELETE CASCADE;
 
-ALTER TABLE "likes" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
+ALTER TABLE "likes" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE;
 
-ALTER TABLE "articles_tags" ADD FOREIGN KEY ("article_id") REFERENCES "articles" ("id");
+ALTER TABLE "articles_tags" ADD FOREIGN KEY ("article_id") REFERENCES "articles" ("id") ON DELETE CASCADE;
 
-ALTER TABLE "articles_tags" ADD FOREIGN KEY ("tag_id") REFERENCES "tags" ("id");
+ALTER TABLE "articles_tags" ADD FOREIGN KEY ("tag_id") REFERENCES "tags" ("id") ON DELETE CASCADE;
 
-ALTER TABLE "comments" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
+ALTER TABLE "comments" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;

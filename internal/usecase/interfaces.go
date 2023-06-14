@@ -57,8 +57,8 @@ type FollowingRepo interface {
 type Article interface {
 	GetBySlug(context.Context, string) (entity.Article, error)
 	Create(context.Context, entity.Article, []string) (entity.Article, error)
-	Update(context.Context, string) (entity.Article, error)
-	DeleteBySlug(context.Context, string) (entity.Article, error)
+	Update(context.Context, entity.Article, string) error
+	DeleteBySlug(context.Context, string) error
 	List(context.Context, string) ([]entity.Article, error)
 
 	GetTagList(context.Context, uint64) ([]string, error)
@@ -68,8 +68,8 @@ type ArticleRepo interface {
 	GetIdBySlug(context.Context, string) (uint64, error)
 	GetBySlug(context.Context, string) (entity.Article, error)
 	Create(context.Context, entity.Article) (entity.Article, error)
-	Update(context.Context, string) (entity.Article, error)
-	DeleteBySlug(context.Context, string) (entity.Article, error)
+	Update(context.Context, entity.Article, string) error
+	DeleteBySlug(context.Context, string) error
 	List(context.Context, string) ([]entity.Article, error)
 }
 

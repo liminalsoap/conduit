@@ -65,14 +65,27 @@ func (a ArticleRepo) Create(ctx context.Context, article entity.Article) (entity
 	return createdArticle, err
 }
 
-func (a ArticleRepo) Update(ctx context.Context, slug string) (entity.Article, error) {
-	//TODO implement me
-	panic("implement me")
+func (a ArticleRepo) Update(ctx context.Context, article entity.Article, slug string) error {
+	_, err := a.Conn.Exec(
+		ctx,
+		"UPDATE articles SET title = $1, description = $2, body = $3 WHERE id = $4",
+		article.Title,
+		article.Description,
+		article.Body,
+		article.Id,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (a ArticleRepo) DeleteBySlug(ctx context.Context, slug string) (entity.Article, error) {
-	//TODO implement me
-	panic("implement me")
+func (a ArticleRepo) DeleteBySlug(ctx context.Context, slug string) error {
+	_, err := a.Conn.Exec(ctx, "DELETE FROM articles WHERE slug = $1", slug)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (a ArticleRepo) List(ctx context.Context, slug string) ([]entity.Article, error) {

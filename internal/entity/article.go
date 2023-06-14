@@ -55,3 +55,15 @@ func (a *Article) GenerateSlug() {
 	slug := strings.Join(words, "-")
 	a.Slug = slug
 }
+
+func (a *Article) SetInputData(title, description, body string) {
+	if title != "" {
+		a.Title = title
+	}
+	if description != "" {
+		a.Description = description
+	}
+	if body != "" {
+		a.Body = body
+	}
+}
