@@ -25,7 +25,7 @@ type ArticleOutput struct {
 	CreatedAt      time.Time `json:"createdAt"`
 	UpdatedAt      time.Time `json:"updatedAt"`
 	Favorited      bool      `json:"favorited"`
-	FavoritesCount int       `json:"favoritesCount"`
+	FavoritesCount uint64    `json:"favoritesCount"`
 	Author         Profile   `json:"author"`
 }
 
@@ -33,7 +33,7 @@ type ArticleOutputName struct {
 	ArticleOutput `json:"article"`
 }
 
-func (a *Article) PrepareOutput(tagList []string, favorited bool, favoritesCount int, author Profile) ArticleOutputName {
+func (a *Article) PrepareOutput(tagList []string, favorited bool, favoritesCount uint64, author Profile) ArticleOutputName {
 	article := ArticleOutput{
 		a.Slug,
 		a.Title,

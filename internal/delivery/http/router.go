@@ -21,6 +21,6 @@ func NewRouter(handler *gin.Engine, log logger.Interface, uc usecase.UseCases, c
 		NewTagRoutes(h, log, uc.Tag)
 		NewUserRoutes(h, log, uc.User, cfg, mw)
 		NewFollowingRoutes(h, log, uc.Following, uc.User, mw)
-		NewArticleRoutes(h, log, uc.Article, uc.Following, uc.User, mw)
+		NewArticleRoutes(h, log, uc.Article, uc.Following, uc.User, uc.Like, mw)
 	}
 }

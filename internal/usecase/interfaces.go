@@ -10,6 +10,8 @@ type UseCases struct {
 	User
 	Following
 	Article
+	ArticleTag
+	Like
 }
 
 type Tag interface {
@@ -82,4 +84,16 @@ type ArticleTag interface {
 type ArticleTagRepo interface {
 	GetTagIdsByArticleId(context.Context, uint64) ([]uint64, error)
 	Add(context.Context, uint64, uint64) error
+}
+
+type Like interface {
+	Favorite(context.Context, uint64, uint64) error
+	Unfavorite(context.Context, uint64, uint64) error
+	Count(context.Context, uint64, uint64) (uint64, error)
+}
+
+type LikeRepo interface {
+	Add(context.Context, uint64, uint64) error
+	Delete(context.Context, uint64, uint64) error
+	Count(context.Context, uint64, uint64) (uint64, error)
 }

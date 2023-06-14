@@ -33,10 +33,14 @@ func initUseCases(pg *postgres.Postgres) usecase.UseCases {
 		tagUseCase,
 		articleTagUseCase,
 	)
+	likeUseCase := usecase.NewLikeUseCase(
+		repository.NewLikeRepo(pg),
+	)
 	useCases.Tag = tagUseCase
 	useCases.User = userUseCase
 	useCases.Following = followingUceCase
 	useCases.Article = articleUseCase
+	useCases.Like = likeUseCase
 	return useCases
 }
 
