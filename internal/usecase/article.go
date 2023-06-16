@@ -53,8 +53,8 @@ func (a ArticleUseCase) DeleteBySlug(ctx context.Context, slug string) error {
 	return a.repo.DeleteBySlug(ctx, slug)
 }
 
-func (a ArticleUseCase) List(ctx context.Context) ([]entity.ArticleInput, error) {
-	return a.repo.List(ctx)
+func (a ArticleUseCase) List(ctx context.Context, filter string) ([]entity.ArticleInput, error) {
+	return a.repo.List(ctx, filter)
 }
 
 func (a ArticleUseCase) GetTagList(ctx context.Context, id uint64) ([]string, error) {

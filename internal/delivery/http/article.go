@@ -5,6 +5,7 @@ import (
 	"conduit-go/internal/middleware"
 	"conduit-go/internal/usecase"
 	"conduit-go/pkg/logger"
+	"conduit-go/pkg/utils"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -234,13 +235,15 @@ type ArticlesOutput struct {
 
 func (a articleRoutes) List(c *gin.Context) {
 	// TODO: filter list articles
-	//tag := c.Query("tag")
-	//author := c.Query("author")
-	//favorited := c.Query("favorited")
-	//limit := c.Query("limit")
-	//offset := c.Query("offset")
+	tag := c.Query("tag")
+	author := c.Query("author")
+	favorited := c.Query("favorited")
+	limit := c.Query("limit")
+	offset := c.Query("offset")
 
-	articles, err := a.useCase.List(c.Request.Context())
+	filter := utils.CreateListFilter(tag, author, favorited, limit, offset)
+
+	articles, err := a.useCase.List(c.Request.Context(), filter)
 	if err != nil {
 		a.log.Errorf("error get articles: %s", err)
 		errorResponse(c, http.StatusBadRequest, "error get articles")

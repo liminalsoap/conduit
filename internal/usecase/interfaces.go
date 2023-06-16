@@ -61,7 +61,7 @@ type Article interface {
 	Create(context.Context, entity.Article, []string) (entity.ArticleInput, error)
 	Update(context.Context, entity.Article, string) error
 	DeleteBySlug(context.Context, string) error
-	List(context.Context) ([]entity.ArticleInput, error)
+	List(context.Context, string) ([]entity.ArticleInput, error)
 
 	GetTagList(context.Context, uint64) ([]string, error)
 }
@@ -73,7 +73,7 @@ type ArticleRepo interface {
 	Update(context.Context, entity.Article, string) error
 	DeleteBySlug(context.Context, string) error
 
-	List(context.Context) ([]entity.ArticleInput, error)
+	List(context.Context, string) ([]entity.ArticleInput, error)
 }
 
 type ArticleTag interface {

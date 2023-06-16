@@ -19,19 +19,20 @@ type Article struct {
 }
 
 type ArticleInput struct {
-	Id                 uint64          `json:"id,omitempty"`
-	Slug               string          `json:"slug"`
-	Title              string          `json:"title"`
-	Description        string          `json:"description"`
-	Body               string          `json:"body"`
-	TagList            []string        `json:"tagList"`
-	CreatedAt          time.Time       `json:"createdAt"`
-	UpdatedAt          time.Time       `json:"updatedAt"`
-	UserId             uint64          `json:"userId,omitempty"`
-	Favorited          bool            `json:"favorited"`
-	FavoritedUsersList []sql.NullInt64 `json:"favoritedUsersList,omitempty"`
-	FavoritesCount     uint64          `json:"favoritesCount"`
-	Author             User            `json:"author"`
+	Id                      uint64          `json:"id,omitempty"`
+	Slug                    string          `json:"slug"`
+	Title                   string          `json:"title"`
+	Description             string          `json:"description"`
+	Body                    string          `json:"body"`
+	TagList                 []string        `json:"tagList"`
+	CreatedAt               time.Time       `json:"createdAt"`
+	UpdatedAt               time.Time       `json:"updatedAt"`
+	UserId                  uint64          `json:"userId,omitempty"`
+	Favorited               bool            `json:"favorited"`
+	FavoritedUsersIds       []sql.NullInt64 `json:"favoritedUsersList,omitempty"`
+	FavoritesCount          uint64          `json:"favoritesCount"`
+	Author                  User            `json:"author"`
+	FavoritedUsersUsernames []sql.NullString
 }
 
 type ArticleOutput struct {
@@ -57,7 +58,7 @@ type ArticlesOutputAlias struct {
 }
 
 func (a *ArticleInput) SetFavorited(userId uint64) {
-	for _, favoritedId := range a.FavoritedUsersList {
+	for _, favoritedId := range a.FavoritedUsersIds {
 		if favoritedId.Int64 == cast.ToInt64(userId) {
 			a.Favorited = true
 		}
@@ -66,8 +67,8 @@ func (a *ArticleInput) SetFavorited(userId uint64) {
 
 func (a *ArticleInput) PrepareArticleOutput() ArticleOutput {
 	favorites := 0
-	if a.FavoritedUsersList[0].Valid {
-		favorites = len(a.FavoritedUsersList)
+	if a.FavoritedUsersIds[0].Valid {
+		favorites = len(a.FavoritedUsersIds)
 	}
 	return ArticleOutput{
 		a.Slug,

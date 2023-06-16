@@ -50,7 +50,7 @@ GROUP BY a.id, u.id`,
 		&article.Author.Bio,
 		&article.Author.Image,
 		&article.TagList,
-		&article.FavoritedUsersList,
+		&article.FavoritedUsersIds,
 	)
 	if err != nil {
 		return entity.ArticleInput{}, err
@@ -102,17 +102,23 @@ func (a ArticleRepo) DeleteBySlug(ctx context.Context, slug string) error {
 	return nil
 }
 
-func (a ArticleRepo) List(ctx context.Context) ([]entity.ArticleInput, error) {
-	rows, err := a.Conn.Query(
-		ctx,
-		`SELECT a.id, a.slug, a.title, a.description, a.body, a.created_at, a.updated_at, a.user_id, 
-u.username, u.bio, u.image, array_agg(DISTINCT t.title) tags, array_agg(DISTINCT l.user_id) favorited
+func (a ArticleRepo) List(ctx context.Context, filter string) ([]entity.ArticleInput, error) {
+	sql := `SELECT a.id, a.slug, a.title, a.description, a.body, a.created_at, a.updated_at, a.user_id,
+       u.username, u.bio, u.image, 
+       array_agg(DISTINCT t.title) tags,
+       array_agg(DISTINCT l.user_id) favorited, 
+       array_agg(DISTINCT u_fav.username) favoritedNames
 FROM articles a
 JOIN articles_tags at ON a.id = at.article_id
 JOIN tags t ON at.tag_id = t.id
 LEFT JOIN users u ON a.user_id = u.id
 LEFT JOIN likes l ON a.id = l.article_id
-GROUP BY a.id, u.id;`,
+LEFT JOIN users u_fav ON l.user_id = u_fav.id
+GROUP BY a.id, u.id`
+	sql += filter
+	rows, err := a.Conn.Query(
+		ctx,
+		sql,
 	)
 	if err != nil {
 		return nil, err
@@ -134,7 +140,8 @@ GROUP BY a.id, u.id;`,
 			&article.Author.Bio,
 			&article.Author.Image,
 			&article.TagList,
-			&article.FavoritedUsersList,
+			&article.FavoritedUsersIds,
+			&article.FavoritedUsersUsernames,
 		)
 		if err != nil && err != pgx.ErrNoRows {
 			return nil, err
