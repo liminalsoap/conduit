@@ -18,6 +18,6 @@ func (l LikeUseCase) Unfavorite(ctx context.Context, articleId, userId uint64) e
 	return l.repo.Delete(ctx, articleId, userId)
 }
 
-func (l LikeUseCase) Count(ctx context.Context, articleId uint64, userId uint64) (uint64, error) {
-	return l.repo.Count(ctx, articleId, userId)
+func (l LikeUseCase) Count(ctx context.Context, articleId uint64) (uint64, error) {
+	return l.repo.Count(ctx, articleId)
 }

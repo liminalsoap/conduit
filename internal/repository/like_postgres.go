@@ -48,12 +48,11 @@ func (l LikeRepo) Delete(ctx context.Context, articleId, userId uint64) error {
 	return nil
 }
 
-func (l LikeRepo) Count(ctx context.Context, articleId, userId uint64) (uint64, error) {
+func (l LikeRepo) Count(ctx context.Context, articleId uint64) (uint64, error) {
 	var count uint64
 	err := l.Conn.QueryRow(
 		ctx,
-		"SELECT COUNT(*) FROM likes WHERE user_id = $1 GROUP BY article_id HAVING article_id = $2",
-		userId,
+		"SELECT COUNT(*) FROM likes GROUP BY article_id HAVING article_id = $1",
 		articleId,
 	).Scan(&count)
 	if err != nil && err != pgx.ErrNoRows {

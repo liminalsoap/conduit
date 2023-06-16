@@ -16,27 +16,31 @@ func NewArticleUseCase(r ArticleRepo, tagU *TagUseCase, articleTagU *ArticleTagU
 	return &ArticleUseCase{r, tagU, articleTagU}
 }
 
-func (a ArticleUseCase) GetBySlug(ctx context.Context, slug string) (entity.Article, error) {
+func (a ArticleUseCase) GetBySlug(ctx context.Context, slug string) (entity.ArticleInput, error) {
 	return a.repo.GetBySlug(ctx, slug)
 }
 
-func (a ArticleUseCase) Create(ctx context.Context, article entity.Article, titles []string) (entity.Article, error) {
-	createdArticle, err := a.repo.Create(ctx, article)
+func (a ArticleUseCase) Create(ctx context.Context, article entity.Article, titles []string) (entity.ArticleInput, error) {
+	articleId, err := a.repo.Create(ctx, article)
 	if err != nil {
-		return entity.Article{}, err
+		return entity.ArticleInput{}, err
 	}
 	if titles != nil {
 		titlesIds, err := a.tagRepo.GetByTitles(ctx, titles)
 		if err != nil {
-			return entity.Article{}, err
+			return entity.ArticleInput{}, err
 		}
 		if titlesIds == nil {
-			return entity.Article{}, errors.New("tags incorrect")
+			return entity.ArticleInput{}, errors.New("tags incorrect")
 		}
-		err = a.articleTagRepo.AddList(ctx, createdArticle.Id, titlesIds)
+		err = a.articleTagRepo.AddList(ctx, articleId, titlesIds)
 		if err != nil {
-			return entity.Article{}, err
+			return entity.ArticleInput{}, err
 		}
+	}
+	createdArticle, err := a.GetBySlug(ctx, article.Slug)
+	if err != nil {
+		return entity.ArticleInput{}, err
 	}
 	return createdArticle, nil
 }
@@ -49,9 +53,8 @@ func (a ArticleUseCase) DeleteBySlug(ctx context.Context, slug string) error {
 	return a.repo.DeleteBySlug(ctx, slug)
 }
 
-func (a ArticleUseCase) List(ctx context.Context, slug string) ([]entity.Article, error) {
-	//TODO implement me
-	panic("implement me")
+func (a ArticleUseCase) List(ctx context.Context) ([]entity.ArticleInput, error) {
+	return a.repo.List(ctx)
 }
 
 func (a ArticleUseCase) GetTagList(ctx context.Context, id uint64) ([]string, error) {

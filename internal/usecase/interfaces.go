@@ -57,22 +57,23 @@ type FollowingRepo interface {
 }
 
 type Article interface {
-	GetBySlug(context.Context, string) (entity.Article, error)
-	Create(context.Context, entity.Article, []string) (entity.Article, error)
+	GetBySlug(context.Context, string) (entity.ArticleInput, error)
+	Create(context.Context, entity.Article, []string) (entity.ArticleInput, error)
 	Update(context.Context, entity.Article, string) error
 	DeleteBySlug(context.Context, string) error
-	List(context.Context, string) ([]entity.Article, error)
+	List(context.Context) ([]entity.ArticleInput, error)
 
 	GetTagList(context.Context, uint64) ([]string, error)
 }
 
 type ArticleRepo interface {
 	GetIdBySlug(context.Context, string) (uint64, error)
-	GetBySlug(context.Context, string) (entity.Article, error)
-	Create(context.Context, entity.Article) (entity.Article, error)
+	GetBySlug(context.Context, string) (entity.ArticleInput, error)
+	Create(context.Context, entity.Article) (uint64, error)
 	Update(context.Context, entity.Article, string) error
 	DeleteBySlug(context.Context, string) error
-	List(context.Context, string) ([]entity.Article, error)
+
+	List(context.Context) ([]entity.ArticleInput, error)
 }
 
 type ArticleTag interface {
@@ -89,11 +90,11 @@ type ArticleTagRepo interface {
 type Like interface {
 	Favorite(context.Context, uint64, uint64) error
 	Unfavorite(context.Context, uint64, uint64) error
-	Count(context.Context, uint64, uint64) (uint64, error)
+	Count(context.Context, uint64) (uint64, error)
 }
 
 type LikeRepo interface {
 	Add(context.Context, uint64, uint64) error
 	Delete(context.Context, uint64, uint64) error
-	Count(context.Context, uint64, uint64) (uint64, error)
+	Count(context.Context, uint64) (uint64, error)
 }

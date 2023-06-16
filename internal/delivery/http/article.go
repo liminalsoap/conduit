@@ -5,14 +5,10 @@ import (
 	"conduit-go/internal/middleware"
 	"conduit-go/internal/usecase"
 	"conduit-go/pkg/logger"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
-
-// DefaultMyselfFavorited
-// can a user be subscribed to himself
-// true - yes, false - no
-const DefaultMyselfFavorited = false
 
 type articleRoutes struct {
 	useCase          usecase.Article
@@ -39,6 +35,8 @@ func NewArticleRoutes(
 		h.GET("/:slug", routes.Get)
 		h.PUT("/:slug", mw.AuthMiddleware, routes.Update)
 		h.DELETE("/:slug", mw.AuthMiddleware, routes.Delete)
+
+		h.GET("/", routes.List)
 
 		h.POST("/:slug/favorite", mw.AuthMiddleware, routes.Favorite)
 		h.DELETE("/:slug/favorite", mw.AuthMiddleware, routes.Unfavorite)
@@ -78,16 +76,8 @@ func (a articleRoutes) Create(c *gin.Context) {
 		return
 	}
 
-	tagList, err := a.useCase.GetTagList(c.Request.Context(), createdArticle.Id)
-	if err != nil {
-		a.log.Errorf("error get tags: %s", err)
-		errorResponse(c, http.StatusBadRequest, "error get tags")
-
-		return
-	}
-
-	outputArticle := createdArticle.PrepareOutput(tagList, false, 0, user.PrepareReuseProfileOutput(DefaultMyselfFavorited))
-	c.JSON(http.StatusOK, outputArticle)
+	outputArticle := createdArticle.PrepareArticleOutput()
+	c.JSON(http.StatusOK, entity.ArticleOutputAlias{Article: outputArticle})
 }
 
 func (a articleRoutes) Get(c *gin.Context) {
@@ -101,32 +91,8 @@ func (a articleRoutes) Get(c *gin.Context) {
 		return
 	}
 
-	tagList, err := a.useCase.GetTagList(c.Request.Context(), article.Id)
-	if err != nil {
-		a.log.Errorf("error get tags: %s", err)
-		errorResponse(c, http.StatusBadRequest, "error get tags")
-
-		return
-	}
-
-	author, err := a.userUseCase.GetUser(c.Request.Context(), article.UserId)
-	if err != nil {
-		a.log.Errorf("failed found user: %s", err)
-		errorResponse(c, http.StatusBadRequest, "failed found user")
-
-		return
-	}
-
-	count, err := a.likeUseCase.Count(c.Request.Context(), article.Id, author.Id)
-	if err != nil {
-		a.log.Errorf("error count likes: %s", err)
-		errorResponse(c, http.StatusBadRequest, "error count likes")
-
-		return
-	}
-
-	outputArticle := article.PrepareOutput(tagList, false, count, author.PrepareReuseProfileOutput(false))
-	c.JSON(http.StatusOK, outputArticle)
+	outputArticle := article.PrepareArticleOutput()
+	c.JSON(http.StatusOK, entity.ArticleOutputAlias{Article: outputArticle})
 }
 
 type updateArticleInput struct {
@@ -159,36 +125,40 @@ func (a articleRoutes) Update(c *gin.Context) {
 		return
 	}
 
-	article.SetInputData(input.Article.Title, input.Article.Description, input.Article.Body)
+	if article.UserId != user.Id {
+		err = errors.New("permission denied")
+		a.log.Errorf("error get article by slug: %s", err)
+		errorResponse(c, http.StatusUnauthorized, err.Error())
 
-	if err = a.useCase.Update(c.Request.Context(), article, slug); err != nil {
+		return
+	}
+
+	articleEntity := entity.Article{
+		Id:          article.Id,
+		Slug:        article.Slug,
+		Title:       article.Title,
+		Description: article.Description,
+		Body:        article.Body,
+		CreatedAt:   article.CreatedAt,
+		UpdatedAt:   article.UpdatedAt,
+		UserId:      article.UserId,
+	}
+	articleEntity.SetInputData(input.Article.Title, input.Article.Description, input.Article.Body)
+	if input.Article.Title != "" {
+		articleEntity.GenerateSlug()
+	}
+
+	if err = a.useCase.Update(c.Request.Context(), articleEntity, slug); err != nil {
 		a.log.Errorf("error update: %s", err)
 		errorResponse(c, http.StatusBadRequest, "error update")
 
 		return
 	}
-	if input.Article.Title != "" {
-		article.GenerateSlug()
-	}
 
-	tagList, err := a.useCase.GetTagList(c.Request.Context(), article.Id)
-	if err != nil {
-		a.log.Errorf("error get tags: %s", err)
-		errorResponse(c, http.StatusBadRequest, "error get tags")
-
-		return
-	}
-
-	count, err := a.likeUseCase.Count(c.Request.Context(), article.Id, user.Id)
-	if err != nil {
-		a.log.Errorf("error count likes: %s", err)
-		errorResponse(c, http.StatusBadRequest, "error count likes")
-
-		return
-	}
-
-	outputArticle := article.PrepareOutput(tagList, false, count, user.PrepareReuseProfileOutput(DefaultMyselfFavorited))
-	c.JSON(http.StatusOK, outputArticle)
+	article.SetArticleData(articleEntity.Slug, articleEntity.Title, articleEntity.Description, articleEntity.Body)
+	article.SetFavorited(user.Id)
+	outputArticle := article.PrepareArticleOutput()
+	c.JSON(http.StatusOK, entity.ArticleOutputAlias{Article: outputArticle})
 }
 
 func (a articleRoutes) Delete(c *gin.Context) {
@@ -226,24 +196,10 @@ func (a articleRoutes) Favorite(c *gin.Context) {
 		return
 	}
 
-	tagList, err := a.useCase.GetTagList(c.Request.Context(), article.Id)
-	if err != nil {
-		a.log.Errorf("error get tags: %s", err)
-		errorResponse(c, http.StatusBadRequest, "error get tags")
-
-		return
-	}
-
-	count, err := a.likeUseCase.Count(c.Request.Context(), article.Id, user.Id)
-	if err != nil {
-		a.log.Errorf("error count likes: %s", err)
-		errorResponse(c, http.StatusBadRequest, "error count likes")
-
-		return
-	}
-
-	outputArticle := article.PrepareOutput(tagList, true, count, user.PrepareReuseProfileOutput(DefaultMyselfFavorited))
-	c.JSON(http.StatusOK, outputArticle)
+	article.Favorited = true
+	outputArticle := article.PrepareArticleOutput()
+	outputArticle.FavoritesCount++
+	c.JSON(http.StatusOK, entity.ArticleOutputAlias{Article: outputArticle})
 }
 
 func (a articleRoutes) Unfavorite(c *gin.Context) {
@@ -267,22 +223,38 @@ func (a articleRoutes) Unfavorite(c *gin.Context) {
 		return
 	}
 
-	tagList, err := a.useCase.GetTagList(c.Request.Context(), article.Id)
+	outputArticle := article.PrepareArticleOutput()
+	c.JSON(http.StatusOK, entity.ArticleOutputAlias{Article: outputArticle})
+}
+
+type ArticlesOutput struct {
+	Articles      []entity.ArticleInput `json:"articles"`
+	ArticlesCount int                   `json:"articlesCount"`
+}
+
+func (a articleRoutes) List(c *gin.Context) {
+	// TODO: filter list articles
+	//tag := c.Query("tag")
+	//author := c.Query("author")
+	//favorited := c.Query("favorited")
+	//limit := c.Query("limit")
+	//offset := c.Query("offset")
+
+	articles, err := a.useCase.List(c.Request.Context())
 	if err != nil {
-		a.log.Errorf("error get tags: %s", err)
-		errorResponse(c, http.StatusBadRequest, "error get tags")
+		a.log.Errorf("error get articles: %s", err)
+		errorResponse(c, http.StatusBadRequest, "error get articles")
 
 		return
 	}
-
-	count, err := a.likeUseCase.Count(c.Request.Context(), article.Id, user.Id)
-	if err != nil {
-		a.log.Errorf("error count likes: %s", err)
-		errorResponse(c, http.StatusBadRequest, "error count likes")
-
-		return
+	var outputArticles []entity.ArticleOutput
+	for _, article := range articles {
+		outputArticles = append(outputArticles, article.PrepareArticleOutput())
 	}
 
-	outputArticle := article.PrepareOutput(tagList, false, count, user.PrepareReuseProfileOutput(DefaultMyselfFavorited))
-	c.JSON(http.StatusOK, outputArticle)
+	c.JSON(http.StatusOK, entity.ArticlesOutputAlias{Articles: outputArticles, ArticlesCount: len(outputArticles)})
+}
+
+func (a articleRoutes) Feed(c *gin.Context) {
+	// TODO: feed articles
 }

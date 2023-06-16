@@ -65,21 +65,15 @@ type ProfileOutput struct {
 }
 
 func (u *User) PrepareReuseProfileOutput(isFollowing bool) Profile {
-	profile := Profile{
+	return Profile{
 		u.Username,
 		u.Bio.String,
 		u.Image.String,
 		isFollowing,
 	}
-	return profile
 }
 
 func (u *User) PrepareProfileOutput(isFollowing bool) ProfileOutput {
-	profile := Profile{
-		u.Username,
-		u.Bio.String,
-		u.Image.String,
-		isFollowing,
-	}
+	profile := u.PrepareReuseProfileOutput(isFollowing)
 	return ProfileOutput{profile}
 }

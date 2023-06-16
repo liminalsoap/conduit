@@ -4,6 +4,7 @@ import (
 	"conduit-go/internal/entity"
 	"conduit-go/pkg/postgres"
 	"context"
+	"github.com/jackc/pgx/v5"
 )
 
 type ArticleRepo struct {
@@ -23,11 +24,18 @@ func (a ArticleRepo) GetIdBySlug(ctx context.Context, slug string) (uint64, erro
 	return id, nil
 }
 
-func (a ArticleRepo) GetBySlug(ctx context.Context, slug string) (entity.Article, error) {
-	var article entity.Article
+func (a ArticleRepo) GetBySlug(ctx context.Context, slug string) (entity.ArticleInput, error) {
+	var article entity.ArticleInput
 	err := a.Conn.QueryRow(
 		ctx,
-		"SELECT id, slug, title, description, body, created_at, updated_at, user_id FROM articles WHERE slug = $1",
+		`SELECT a.id, a.slug, a.title, a.description, a.body, a.created_at, a.updated_at, a.user_id, u.username, u.bio, u.image, array_agg(DISTINCT t.title) tags, array_agg(DISTINCT l.user_id) favorited
+FROM articles a
+JOIN articles_tags at ON a.id = at.article_id
+JOIN tags t ON at.tag_id = t.id
+LEFT JOIN users u ON a.user_id = u.id
+LEFT JOIN likes l ON a.id = l.article_id
+WHERE a.slug = $1
+GROUP BY a.id, u.id`,
 		slug,
 	).Scan(
 		&article.Id,
@@ -38,14 +46,19 @@ func (a ArticleRepo) GetBySlug(ctx context.Context, slug string) (entity.Article
 		&article.CreatedAt,
 		&article.UpdatedAt,
 		&article.UserId,
+		&article.Author.Username,
+		&article.Author.Bio,
+		&article.Author.Image,
+		&article.TagList,
+		&article.FavoritedUsersList,
 	)
 	if err != nil {
-		return entity.Article{}, err
+		return entity.ArticleInput{}, err
 	}
 	return article, nil
 }
 
-func (a ArticleRepo) Create(ctx context.Context, article entity.Article) (entity.Article, error) {
+func (a ArticleRepo) Create(ctx context.Context, article entity.Article) (uint64, error) {
 	_, err := a.Conn.Exec(
 		ctx,
 		"INSERT INTO articles(slug, title, description, body, user_id) VALUES ($1, $2, $3, $4, $5)",
@@ -56,19 +69,20 @@ func (a ArticleRepo) Create(ctx context.Context, article entity.Article) (entity
 		article.UserId,
 	)
 	if err != nil {
-		return entity.Article{}, err
+		return 0, err
 	}
-	createdArticle, err := a.GetBySlug(ctx, article.Slug)
+	id, err := a.GetIdBySlug(ctx, article.Slug)
 	if err != nil {
-		return entity.Article{}, err
+		return 0, err
 	}
-	return createdArticle, err
+	return id, nil
 }
 
 func (a ArticleRepo) Update(ctx context.Context, article entity.Article, slug string) error {
 	_, err := a.Conn.Exec(
 		ctx,
-		"UPDATE articles SET title = $1, description = $2, body = $3 WHERE id = $4",
+		"UPDATE articles SET slug = $1, title = $2, description = $3, body = $4 WHERE id = $5",
+		article.Slug,
 		article.Title,
 		article.Description,
 		article.Body,
@@ -88,7 +102,48 @@ func (a ArticleRepo) DeleteBySlug(ctx context.Context, slug string) error {
 	return nil
 }
 
-func (a ArticleRepo) List(ctx context.Context, slug string) ([]entity.Article, error) {
-	//TODO implement me
-	panic("implement me")
+func (a ArticleRepo) List(ctx context.Context) ([]entity.ArticleInput, error) {
+	rows, err := a.Conn.Query(
+		ctx,
+		`SELECT a.id, a.slug, a.title, a.description, a.body, a.created_at, a.updated_at, a.user_id, 
+u.username, u.bio, u.image, array_agg(DISTINCT t.title) tags, array_agg(DISTINCT l.user_id) favorited
+FROM articles a
+JOIN articles_tags at ON a.id = at.article_id
+JOIN tags t ON at.tag_id = t.id
+LEFT JOIN users u ON a.user_id = u.id
+LEFT JOIN likes l ON a.id = l.article_id
+GROUP BY a.id, u.id;`,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var articles []entity.ArticleInput
+	for rows.Next() {
+		var article entity.ArticleInput
+		err = rows.Scan(
+			&article.Id,
+			&article.Slug,
+			&article.Title,
+			&article.Description,
+			&article.Body,
+			&article.CreatedAt,
+			&article.UpdatedAt,
+			&article.UserId,
+			&article.Author.Username,
+			&article.Author.Bio,
+			&article.Author.Image,
+			&article.TagList,
+			&article.FavoritedUsersList,
+		)
+		if err != nil && err != pgx.ErrNoRows {
+			return nil, err
+		}
+		articles = append(articles, article)
+	}
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+
+	return articles, nil
 }
