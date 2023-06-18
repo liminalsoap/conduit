@@ -4,9 +4,9 @@ The project uses the Go programming language. The project is based on the archit
 Postgresql was used as a DBMS
 
 ToDo:
-- [] Get the URL connection to the database via the environment variable (env)
-- [] Cover the project with tests
-- [] Add optional authorization
-- [] Containerize the application (with docker)
-- [] Optimize queries and refactor code
-- [] Add custom errors and check the status codes returned
+-  Get the URL connection to the database via the environment variable (env)
+-  Cover the project with tests
+-  Add optional authorization
+-  Containerize the application (with docker)
+-  Optimize queries and refactor code
+-  Add custom errors and check the status codes returned
