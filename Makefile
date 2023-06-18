@@ -1,13 +1,13 @@
-POSTGRESQL_URL = postgres://root:secret@localhost:5432/conduit?sslmode=disable
+POSTGRESQL_URL = postgres://postgres:0000@localhost:5432/conduit?sslmode=disable
 
 migrate-create:
 	migrate create -ext sql -dir migrations/ -seq init
 
 migrate-up:
-	migrate -database ${POSTGRESQL_URL} -path migrations up
+	migrate -database postgres://postgres:0000@localhost:5432/conduit?sslmode=disable -path migrations up
 
 migrate-down:
-	migrate -database ${POSTGRESQL_URL} -path migrations down
+	migrate -database postgres://postgres:0000@localhost:5432/conduit?sslmode=disable -path migrations down
 
 run:
 	go run ./cmd/app/main.go

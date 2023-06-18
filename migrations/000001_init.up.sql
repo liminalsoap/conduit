@@ -47,7 +47,8 @@ CREATE TABLE "comments" (
                             "created_at" timestamp NOT NULL DEFAULT (now()),
                             "updated_at" timestamp NOT NULL DEFAULT (now()),
                             "body" text NOT NULL,
-                            "user_id" bigint NOT NULL
+                            "user_id" bigint NOT NULL,
+                            "article_id" bigint NOT NULL
 );
 
 CREATE INDEX ON "users" ("username");
@@ -77,3 +78,5 @@ ALTER TABLE "articles_tags" ADD FOREIGN KEY ("article_id") REFERENCES "articles"
 ALTER TABLE "articles_tags" ADD FOREIGN KEY ("tag_id") REFERENCES "tags" ("id") ON DELETE CASCADE;
 
 ALTER TABLE "comments" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+ALTER TABLE "comments" ADD FOREIGN KEY ("article_id") REFERENCES "articles" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;

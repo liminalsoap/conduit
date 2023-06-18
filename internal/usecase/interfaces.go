@@ -12,6 +12,7 @@ type UseCases struct {
 	Article
 	ArticleTag
 	Like
+	Comment
 }
 
 type Tag interface {
@@ -97,4 +98,19 @@ type LikeRepo interface {
 	Add(context.Context, uint64, uint64) error
 	Delete(context.Context, uint64, uint64) error
 	Count(context.Context, uint64) (uint64, error)
+}
+
+type Comment interface {
+	Add(context.Context, string, entity.Comment) (entity.Comment, error)
+	GetByArticleId(context.Context, string) ([]entity.CommentInput, error)
+	GetById(context.Context, uint64) (entity.Comment, error)
+	Delete(context.Context, uint64) error
+}
+
+type CommentRepo interface {
+	Add(context.Context, uint64, entity.Comment) (entity.Comment, error)
+	GetByArticleId(context.Context, uint64) ([]entity.CommentInput, error)
+	GetById(context.Context, uint64) (entity.Comment, error)
+	Delete(context.Context, uint64) error
+	GetLastComment(ctx context.Context) (entity.Comment, error)
 }

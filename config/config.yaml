@@ -1,5 +1,5 @@
 postgresql:
-  url: postgres://root:secret@localhost:5432/conduit?sslmode=disable
+  url: postgres://postgres:0000@localhost:5432/conduit?sslmode=disable
 
 logger:
   level: debug

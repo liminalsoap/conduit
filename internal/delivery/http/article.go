@@ -8,6 +8,7 @@ import (
 	"conduit-go/pkg/utils"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/cast"
 	"net/http"
 )
 
@@ -16,6 +17,7 @@ type articleRoutes struct {
 	followingUseCase usecase.Following
 	userUseCase      usecase.User
 	likeUseCase      usecase.Like
+	commentUseCase   usecase.Comment
 	log              logger.Interface
 }
 
@@ -26,9 +28,16 @@ func NewArticleRoutes(
 	followingUc usecase.Following,
 	userUc usecase.User,
 	likeUc usecase.Like,
+	commentUc usecase.Comment,
 	mw *middleware.MiddlewareManager,
 ) {
-	routes := articleRoutes{uc, followingUc, userUc, likeUc, log}
+	routes := articleRoutes{
+		uc,
+		followingUc,
+		userUc, likeUc,
+		commentUc,
+		log,
+	}
 
 	h := handler.Group("/articles")
 	{
@@ -38,6 +47,10 @@ func NewArticleRoutes(
 		h.DELETE("/:slug", mw.AuthMiddleware, routes.Delete)
 
 		h.GET("/", routes.List)
+
+		h.POST("/:slug/comments", mw.AuthMiddleware, routes.AddComment)
+		h.GET("/:slug/comments", routes.GetComments)
+		h.DELETE("/:slug/comments/:id", mw.AuthMiddleware, routes.DeleteComment)
 
 		h.POST("/:slug/favorite", mw.AuthMiddleware, routes.Favorite)
 		h.DELETE("/:slug/favorite", mw.AuthMiddleware, routes.Unfavorite)
@@ -234,7 +247,6 @@ type ArticlesOutput struct {
 }
 
 func (a articleRoutes) List(c *gin.Context) {
-	// TODO: filter list articles
 	tag := c.Query("tag")
 	author := c.Query("author")
 	favorited := c.Query("favorited")
@@ -258,6 +270,98 @@ func (a articleRoutes) List(c *gin.Context) {
 	c.JSON(http.StatusOK, entity.ArticlesOutputAlias{Articles: outputArticles, ArticlesCount: len(outputArticles)})
 }
 
-func (a articleRoutes) Feed(c *gin.Context) {
-	// TODO: feed articles
+type CommentInput struct {
+	Comment struct {
+		Body string `json:"body"`
+	} `json:"comment"`
+}
+
+func (a articleRoutes) AddComment(c *gin.Context) {
+	userCtx, _ := c.Get("user")
+	user := userCtx.(entity.User)
+
+	slug := c.Param("slug")
+
+	var input CommentInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		a.log.Errorf("error bind: %s", err)
+		errorResponse(c, http.StatusBadRequest, "error bind")
+
+		return
+	}
+
+	comment := entity.Comment{
+		Body:      input.Comment.Body,
+		UserId:    user.Id,
+		ArticleId: 0,
+	}
+	createdComment, err := a.commentUseCase.Add(c.Request.Context(), slug, comment)
+	if err != nil {
+		a.log.Errorf("error add comment: %s", err)
+		errorResponse(c, http.StatusBadRequest, "error add comment")
+
+		return
+	}
+
+	commentAuthor, err := a.userUseCase.GetUser(c.Request.Context(), user.Id)
+	if err != nil {
+		a.log.Errorf("error find author: %s", err)
+		errorResponse(c, http.StatusBadRequest, "error find author")
+
+		return
+	}
+
+	output := createdComment.PrepareOutput(commentAuthor, false)
+	c.JSON(http.StatusOK, entity.CommentOutputAlias{Comment: output})
+}
+
+func (a articleRoutes) GetComments(c *gin.Context) {
+	slug := c.Param("slug")
+
+	comments, err := a.commentUseCase.GetByArticleId(c.Request.Context(), slug)
+	if err != nil {
+		a.log.Errorf("error get comments: %s", err)
+		errorResponse(c, http.StatusBadRequest, "error get comments")
+
+		return
+	}
+
+	var outputComments []entity.CommentOutput
+	for _, comment := range comments {
+		outputComments = append(outputComments, comment.PrepareOutput())
+	}
+
+	// TODO: fix following output
+	c.JSON(http.StatusOK, entity.CommentsOutputAlias{Comment: outputComments})
+}
+
+func (a articleRoutes) DeleteComment(c *gin.Context) {
+	userCtx, _ := c.Get("user")
+	user := userCtx.(entity.User)
+
+	id := c.Param("id")
+
+	comment, err := a.commentUseCase.GetById(c.Request.Context(), cast.ToUint64(id))
+	if err != nil {
+		a.log.Errorf("comment doesn't exist: %s", err)
+		errorResponse(c, http.StatusBadRequest, "comment doesn't exist")
+
+		return
+	}
+
+	if user.Id != comment.UserId {
+		a.log.Errorf("comment doesn't exist: %s", errors.New("user isn't owner of comment"))
+		errorResponse(c, http.StatusUnauthorized, "user isn't owner of comment")
+
+		return
+	}
+
+	if err = a.commentUseCase.Delete(c.Request.Context(), cast.ToUint64(id)); err != nil {
+		a.log.Errorf("error delete comment: %s", err)
+		errorResponse(c, http.StatusBadRequest, "error delete comment")
+
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "ok"})
 }
